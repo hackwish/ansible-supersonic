@@ -1,0 +1,27 @@
+# tasks file for ansible-supersonic
+
+
+- name: Get latest Release from Supersonic
+  shell: curl -Lo /tmp/supersonic.tar.xz https://github.com/dweymouth/supersonic/releases/download/$(curl -s https://api.github.com/repos/dweymouth/supersonic/releases/latest | grep tag_name | cut -d '"' -f 4 )/Supersonic-$(curl -s https://api.github.com/repos/dweymouth/supersonic/releases/latest | grep tag_name | cut -d '"' -f 4 |  tr -d v)-{{ ansible_system | lower }}-x64.tar.xz
+  args:
+    warn: no
+  when: ansible_architecture == 'x86_64'
+  tags: supersonic
+
+- name: Create tmp directory for Supersonic install
+  file:
+    path: /tmp/supersonic/
+    state: directory
+    mode: '0755'
+
+- name: Unarchive a file
+  unarchive:
+    src: /tmp/supersonic.tar.xz
+    dest: /tmp/supersonic/
+  tags: supersonic
+
+- name: Run 'install' Supersonic Makefile
+  make:
+    chdir: /tmp/supersonic/
+    target: install
+  become: true
